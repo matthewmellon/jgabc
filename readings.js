@@ -214,6 +214,23 @@ function keyupTxtGabc() {
   updateEditor();
 }
 
+function normalizeVerseLigatures(text) {
+  if(!text) return text;
+  if(typeof text.normalize == "function") {
+    text = text.normalize("NFC");
+  }
+  return text.replace(/([aAoO])([eéEÉ])/g, function(match, lead, vowel) {
+    var accented = /[éÉ]/.test(vowel);
+    switch(lead) {
+      case 'a': return accented ? 'ǽ' : 'æ';
+      case 'A': return accented ? 'Ǽ' : 'Æ';
+      case 'o': return accented ? 'œ́' : 'œ';
+      case 'O': return accented ? 'Œ́' : 'Œ';
+    }
+    return match;
+  });
+}
+
 function updateText() {
   localStorage.text = syl = $("#versetext").val();
   updateEditor();
@@ -663,7 +680,17 @@ $(function() {
   $(window).resize(windowResized);
   $("#selFormat").append('<option>' + Object.keys(bi_formats).join('</option><option>') + '</option>');
   $("#txtRecitingTone,#txtFlexTone,#txtMediant,#txtFullStop,#txtQuestion,#txtConclusion").keyup(keyupTxtGabc);
-  $("#versetext").keyup(updateText).keydown(makeInternationalTextBoxKeyDown(false));
+  $("#cbAutoligature")[0].checked = (localStorage.cbAutoligature != "false");
+  $("#cbAutoligature").change(function(){
+    localStorage.cbAutoligature = this.checked;
+  });
+  $("#versetext").keyup(updateText).change(function() {
+    if($("#cbAutoligature")[0] && $("#cbAutoligature")[0].checked) {
+      var normalized = normalizeVerseLigatures(this.value);
+      if(normalized !== this.value) this.value = normalized;
+    }
+    updateText();
+  }).keydown(makeInternationalTextBoxKeyDown(false));
   if(localStorage.text) $("#versetext").val(localStorage.text);
   var cbEnglishChanged = function(){
     selLang = cbEnglish.checked? 'english' : 'latin';

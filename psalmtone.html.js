@@ -220,6 +220,23 @@ function updateVerseGabc() {
   updateEditor();
 }
 
+function normalizeVerseLigatures(text) {
+  if(!text) return text;
+  if(typeof text.normalize == "function") {
+    text = text.normalize("NFC");
+  }
+  return text.replace(/([aAoO])([eéEÉ])/g, function(match, lead, vowel) {
+    var accented = /[éÉ]/.test(vowel);
+    switch(lead) {
+      case 'a': return accented ? 'ǽ' : 'æ';
+      case 'A': return accented ? 'Ǽ' : 'Æ';
+      case 'o': return accented ? 'œ́' : 'œ';
+      case 'O': return accented ? 'Œ́' : 'Œ';
+    }
+    return match;
+  });
+}
+
 function updateText() {
   syl = $("#versetext").val();
   updateEditor();
@@ -803,6 +820,10 @@ $(function() {
     updateText();
   };
   $("#cbEnglish").click(cbEnglishChanged);
+  $("#cbAutoligature")[0].checked = (localStorage.cbAutoligature != "false");
+  $("#cbAutoligature").change(function(){
+    localStorage.cbAutoligature = this.checked;
+  });
   $("#selTones").append('<option>' + getPsalmTones().join('</option><option>') + '</option><optgroup label="Custom"></optgroup>');
   $("#selPsalm").append('<optgroup label="Psalms"><option>' + getPsalms().join('</option><option>') + '</option></optgroup>' +
                         '<optgroup label="Canticles">' + getCanticaOptions() + '</optgroup>');
@@ -810,7 +831,13 @@ $(function() {
   $(`#selPsalm option.${useNovaVulgata ? 'nova-' : ''}vulgata`).attr('disabled', false);
   $("#selFormat").append('<option>' + Object.keys(bi_formats).join('</option><option>') + '</option>');
   $("#versegabc").keyup(updateVerseGabc);
-  $("#versetext").keyup(updateText).keydown(internationalTextBoxKeyDown);
+  $("#versetext").keyup(updateText).change(function() {
+    if($("#cbAutoligature")[0] && $("#cbAutoligature")[0].checked) {
+      var normalized = normalizeVerseLigatures(this.value);
+      if(normalized !== this.value) this.value = normalized;
+    }
+    updateText();
+  }).keydown(internationalTextBoxKeyDown);
   $("#selTones").change(updateEndings);
   $("#selTones").keyup(updateEndings);
   $("#cbSolemn").change(updateEnding);

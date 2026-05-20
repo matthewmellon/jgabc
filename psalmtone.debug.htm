@@ -81,6 +81,7 @@ textarea{
 Mediant of <span id="sMedAccent"></span> accent<span id="sMedAccentS">s</span><span id="sMedPrepOuter"> with <span id="sMedPrep"></span> preperatory syllable<span id="sMedPrepS">s</span></span>
 <br/>Termination of <span id="sTermAccent"></span> accent<span id="sTermAccentS">s</span><span id="sTermPrepOuter"> with <span id="sTermPrep"></span> preperatory syllable<span id="sTermPrepS">s</span></span>
 </td><td><label for="selPsalm">Psalm </label><select id="selPsalm"></select> <input type="checkbox" id="cbUseNovaVulgata"/><label for="cbUseNovaVulgata">Use Nova Vulgata psalms</label> <input type="checkbox" id="cbIncludeGloriaPatri"/><label for="cbIncludeGloriaPatri">Include Glória Pátri</label><br/><div class="tap"><textarea id="versetext" lang="latin" style="height: 96pt; width: 100%;"></textarea></div>
+  <input type="checkbox" id="cbAutoligature" checked/><label for="cbAutoligature" title="Automatically convert ae and oe to ligatures when the verse text changes.">Autoligature</label>
 </td></tr>
 <tr class="bordered"><td>
 <label for="selFormat" title="Select a 'gabc' format to format all verses using gabc.&#10;New formats can be created with the 'Create New Format' button, and all formats can be edited using the panel to the right.">Format verses as: </label><select id="selFormat"></select><input type="button" id="btnDelFormat" value="Delete Current Format"/><input type="button" id="btnNewFormat" value="Create New Format"/>
@@ -280,6 +281,23 @@ function updateGabc() {
   gSyl = $("#versegabc").val();
   updateCustomTone();
   updateEditor();
+}
+
+function normalizeVerseLigatures(text) {
+  if(!text) return text;
+  if(typeof text.normalize == "function") {
+    text = text.normalize("NFC");
+  }
+  return text.replace(/([aAoO])([eéEÉ])/g, function(match, lead, vowel) {
+    var accented = /[éÉ]/.test(vowel);
+    switch(lead) {
+      case 'a': return accented ? 'ǽ' : 'æ';
+      case 'A': return accented ? 'Ǽ' : 'Æ';
+      case 'o': return accented ? 'œ́' : 'œ';
+      case 'O': return accented ? 'Œ́' : 'Œ';
+    }
+    return match;
+  });
 }
 
 function updateText() {
@@ -731,8 +749,18 @@ $(function() {
   $("#selTones").append('<option>' + getPsalmTones().join('</option><option>') + '</option><optgroup label="Custom"></optgroup>');
   $("#selPsalm").append('<option>' + getPsalms().join('</option><option>') + '</option>');
   $("#selFormat").append('<option>' + getKeys(bi_formats).join('</option><option>') + '</option>');
+  $("#cbAutoligature")[0].checked = (localStorage.cbAutoligature != "false");
+  $("#cbAutoligature").change(function(){
+    localStorage.cbAutoligature = this.checked;
+  });
   $("#versegabc").keyup(updateGabc);
-  $("#versetext").keyup(updateText).keydown(internationalTextBoxKeyDown);
+  $("#versetext").keyup(updateText).change(function() {
+    if($("#cbAutoligature")[0] && $("#cbAutoligature")[0].checked) {
+      var normalized = normalizeVerseLigatures(this.value);
+      if(normalized !== this.value) this.value = normalized;
+    }
+    updateText();
+  }).keydown(internationalTextBoxKeyDown);
   $("#selTones").change(updateEndings);
   $("#selTones").keyup(updateEndings);
   $("#cbSolemn").change(updateEnding);
