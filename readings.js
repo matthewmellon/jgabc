@@ -73,8 +73,8 @@ function updateEditor(forceGabcUpdate,_syl) {
   var psalmToneStack = gConclusion;
   for(var i = lines.length - 1; i>=0; --i){
     var line = lines[i][1];
-    var punctuation = lines[i][2];
-    punctuation = (punctuation.match(/[+^`]/) || punctuation)[0]
+    var punctuation = lines[i][2] || '';
+    punctuation = (punctuation.match(/[+^`~.?!;:,]/) || [punctuation])[0] || '';
     var loop = false;
     do{
       psalmTone = psalmToneStack.pop();
@@ -131,7 +131,7 @@ function updateEditor(forceGabcUpdate,_syl) {
           psalmToneStack = gQuestion.slice(0);
           psalmTone = psalmToneStack.pop();
           var match;
-          if(i==0 || lines[i-1][1].match(/\?['"‘“’”]?$/)) {
+          if(i==0 || lines[i-1][1].match(/\?['"«»‹›‘“’”]?$/)) {
             // try to find an earlier place in this sentence to put the pause.
             var indexComma = 1 + lines[i][1].lastIndexOf(', ');
             if(indexComma == 0) {
@@ -143,7 +143,7 @@ function updateEditor(forceGabcUpdate,_syl) {
               lines.splice(i++,0,['',line.slice(0,indexComma).trim(),'']);
               line = line.slice(indexComma+1).trim();
             }
-          } else if((match = line.match(/(['"‘“])[a-z].+?(\1|[”’])$/i))) {
+          } else if((match = line.match(/(['"«‹‘“])[a-z].+?(\1|[»›”’])$/i))) {
             // the question tone should not start before the quotation.
             var search = match[2];
             switch(search) {
@@ -448,7 +448,11 @@ var splitSentences = (function(){
     return (gabc.match(/'[a-m]/g) || ['']).length;
   }
 
+<<<<<<< HEAD
   var sentenceRegex = /((?:,(?![,\r\n])["'“”‘’«»‹›]?|[^\^`~+.?!;:,])+($|,(?=[,\r\n])|[+^`~.?!;:](?:\s*[:+^`])?["'“”‘’«»‹›]*)),?\s*/gi;
+=======
+  var sentenceRegex = /((?:,(?![,\r\n])["'«»‹›“”‘’]?|[^\^`~+.?!;:,])+($|,(?=[,\r\n])|[+^`~.?!;:](?:\s*[:+^`])?["'«»‹›“”‘’]*)),?\s*/gi;
+>>>>>>> 77c1dfda (I added automatic ligature functionality to automatically combine ae, oe, etc. into ligatures.)
   return function(text){
     var question = countAccents($("#txtQuestion").val());
     var mediant = countAccents($("#txtMediant").val());
