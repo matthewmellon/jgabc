@@ -448,11 +448,7 @@ var splitSentences = (function(){
     return (gabc.match(/'[a-m]/g) || ['']).length;
   }
 
-<<<<<<< HEAD
-  var sentenceRegex = /((?:,(?![,\r\n])["'“”‘’«»‹›]?|[^\^`~+.?!;:,])+($|,(?=[,\r\n])|[+^`~.?!;:](?:\s*[:+^`])?["'“”‘’«»‹›]*)),?\s*/gi;
-=======
-  var sentenceRegex = /((?:,(?![,\r\n])["'«»‹›“”‘’]?|[^\^`~+.?!;:,])+($|,(?=[,\r\n])|[+^`~.?!;:](?:\s*[:+^`])?["'«»‹›“”‘’]*)),?\s*/gi;
->>>>>>> 77c1dfda (I added automatic ligature functionality to automatically combine ae, oe, etc. into ligatures.)
+  var sentenceRegex = /((?:,(?![,\r\n])["'""''«»‹›]?|[^\^`~+.?!;:,])+($|,(?=[,\r\n])|[+^`~.?!;:](?:\s*[:+^`])?["'""''«»‹›]*)),?\s*/gi;
   return function(text){
     var question = countAccents($("#txtQuestion").val());
     var mediant = countAccents($("#txtMediant").val());
